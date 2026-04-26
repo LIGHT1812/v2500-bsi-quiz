@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V2500 BSI Question Bank</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+       background: #f0f2f5; color: #333; line-height: 1.6; }
+.container { max-width: 800px; margin: 0 auto; padding: 20px; }
+h1 { text-align: center; color: #1a73e8; margin: 20px 0 5px; font-size: 24px; }
+.subtitle { text-align: center; color: #666; margin-bottom: 8px; font-size: 14px; }
+.shuffle-info { text-align: center; color: #999; margin-bottom: 20px; font-size: 12px;
+                 font-style: italic; }
+.score-bar { background: #fff; border-radius: 12px; padding: 15px 20px;
+             margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+             display: flex; justify-content: space-between; align-items: center;
+             position: sticky; top: 10px; z-index: 100; }
+.score-bar .left { display: flex; gap: 20px; align-items: center; }
+.score-bar .score { font-size: 18px; font-weight: 700; color: #1a73e8; }
+.score-bar .pct { font-size: 14px; color: #666; }
+.score-bar .progress { font-size: 14px; color: #666; }
+.q-card { background: #fff; border-radius: 12px; padding: 24px;
+           margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+           transition: all 0.3s; }
+.q-card.answered { opacity: 0.95; }
+.q-header { display: flex; justify-content: space-between; align-items: flex-start;
+             margin-bottom: 16px; }
+.q-text { font-size: 16px; font-weight: 600; flex: 1; }
+.q-badge { display: flex; gap: 6px; margin-left: 10px; }
+.q-level { background: #e8f0fe; color: #1a73e8; padding: 2px 10px;
+            border-radius: 12px; font-size: 12px; font-weight: 600;
+            white-space: nowrap; }
+.q-orig { background: #f3e8fd; color: #8430ce; padding: 2px 10px;
+           border-radius: 12px; font-size: 11px; font-weight: 500;
+           white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option { display: flex; align-items: center; padding: 12px 16px;
+           border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer;
+           transition: all 0.2s; font-size: 14px; }
+.option:hover { border-color: #1a73e8; background: #f8f9ff; }
+.option.disabled { pointer-events: none; cursor: default; }
+.option .label { font-weight: 700; margin-right: 12px; color: #666;
+                  min-width: 24px; text-align: center; }
+.option.correct { border-color: #34a853; background: #e6f4ea; }
+.option.correct .label { color: #34a853; }
+.option.wrong { border-color: #ea4335; background: #fce8e6; }
+.option.wrong .label { color: #ea4335; }
+.option.show-correct { border-color: #34a853; background: #e6f4ea; }
+.option.show-correct .label { color: #34a853; }
+.feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px;
+             font-size: 14px; display: none; }
+.feedback.correct { background: #e6f4ea; color: #137333; }
+.feedback.wrong { background: #fce8e6; color: #c5221f; }
+.feedback .exp { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.1);
+                  color: #555; font-style: italic; }
+.result-box { background: #fff; border-radius: 12px; padding: 30px;
+               text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+               margin-top: 20px; display: none; }
+.result-box h2 { font-size: 28px; margin-bottom: 10px; }
+.result-box .big-score { font-size: 48px; font-weight: 700; color: #1a73e8; }
+.btn-retry { margin-top: 20px; padding: 12px 32px; background: #1a73e8;
+              color: #fff; border: none; border-radius: 8px; font-size: 16px;
+              cursor: pointer; font-weight: 600; }
+.btn-retry:hover { background: #1557b0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>V2500 BSI Question Bank</h1>
+  <p class="subtitle">V2500 Engine Borescope Inspection &mdash; 48 Questions</p>
+  <p class="shuffle-info">&#128256; Questions &amp; answer options are shuffled each time you open this page</p>
+
+  <div class="score-bar">
+    <div class="left">
+      <div class="score" id="scoreText">Score: 0 / 0</div>
+      <div class="pct" id="pctText"></div>
+    </div>
+    <div class="progress" id="progressText">0 / 48 answered</div>
+  </div>
+
+  <div id="quizArea"></div>
+
+  <div class="result-box" id="resultBox">
+    <h2>Quiz Complete!</h2>
+    <div class="big-score" id="finalScore"></div>
+    <p id="finalDetail" style="margin-top:10px;color:#666;"></p>
+    <button class="btn-retry" onclick="location.reload()">&#128256; Shuffle &amp; Try Again</button>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// DỮ LIỆU GỐC (chưa tráo)
+// ==========================================
+const rawQuestions = [{"num": 1, "text": "What is the low pressure compressor blade numbering for the V2500 engine?", "level": 1, "correctIdx": 0, "options": ["It is numbered as 1.5, 2.0, 2.3, 2.5 stages.", "It is numbered as 1.0, 1.5, 2.0, 2.3, 3.0.", "It is numbered as 1.0, 1.5, 2.0, 2.5, 3.0."], "explanation": "1.5, 2.0, 2.3, 2.5."}, {"num": 2, "text": "Which specific area can be inspected using the port on the LPT case?", "level": 2, "correctIdx": 2, "options": ["The leading edge (LE) of HPT stage 2 blades or The leading edge (LE) of LPT stage 3 blades.", "The trailing edge (TE) of HPT stage 2 blades or The trailing edge (TE) of LPT stage 3 blades.", "The trailing edge (TE) of HPT stage 2 blades or The leading edge (LE) of LPT stage 3 blades."], "explanation": ""}, {"num": 3, "text": "Through which port is the LPC stage 2.5 inspected?", "level": 2, "correctIdx": 0, "options": ["Through the outlet port of the LP compressor bleed valve until stage 2.5 blades can be seen", "Through the main intake cowl until stage 2.5 blades can be seen", "Through the exhaust cone pad until stage 2.5 blades can be seen"], "explanation": ""}, {"num": 4, "text": "Which stage of the turbine rotor blade operates entirely without cooling?", "level": 1, "correctIdx": 1, "options": ["The second stage of the HPT rotor blades.", "All blades of the LPT rotor lack any cooling.", "The fourth stage of the LPT rotor blades."], "explanation": "All blades of LPT rotor."}, {"num": 5, "text": "How is the first stage of the high-pressure compressor (HPC) identified?", "level": 1, "correctIdx": 0, "options": ["It is identified specifically as stage #3.", "It is identified specifically as stage #1.", "It is identified specifically as stage #2.5."], "explanation": "As stage #3."}, {"num": 6, "text": "How do you perform a BSI on stage #1.5 of the low-pressure compressor?", "level": 2, "correctIdx": 0, "options": ["Using a special tool to guide the flexible scope.", "Through the 2.5 Booster Stage Bleed Valve port.", "None of the provided answers are correct here."], "explanation": "By a special tool to guide the flexible fibrescope through the inlet of the core engine."}, {"num": 7, "text": "How many specific rows exist within the V2500 engine combustion liner?", "level": 1, "correctIdx": 0, "options": ["There are exactly five rows in the liner.", "There are exactly six rows in the liner.", "There are exactly seven rows in the liner."], "explanation": "5 rows."}, {"num": 8, "text": "Inspection convex/ concave aerofoil is carried out at:", "level": 1, "correctIdx": 0, "options": ["turbine blades/ Compressor blades.", "Compressor blades/ Combustion Chamber", "Chambustion chamber/ Fan blades"], "explanation": ""}, {"num": 9, "text": "Through which access can HPT stage 1 leading edge blades be inspected?", "level": 1, "correctIdx": 2, "options": ["By removing the main oil pumps or using the outer LPT casing.", "By removing the fuel nozzles or using the main bleed valves.", "By removing the ignition igniter ports or Use some access ports in the combustion area."], "explanation": ""}, {"num": 10, "text": "How can you perform an inspection on the 2.5 stage of the LPC?", "level": 2, "correctIdx": 2, "options": ["By using a special tool guide for the fiberscope.", "Remove blanking plugs below fan exit guide.", "Through the 2.5 Booster Stage Bleed Valve (BSBV) outlet."], "explanation": ""}, {"num": 11, "text": "What type of inspection must be performed immediately after an engine surge?", "level": 2, "correctIdx": 1, "options": ["It is classified as a regular schedule inspection.", "It is classified as an un-schedule inspection.", "It is classified as a very special inspection."], "explanation": "Un- schedule inspection."}, {"num": 12, "text": "What is the turbine blade numbering system used in the V2500 engine?", "level": 1, "correctIdx": 2, "options": ["Stages 1 and 2 High Pressure Turbine/  Stages 1 to 5 comprise the Low Pressure Turbine.", "Stages 1 and 3 High Pressure Turbine/  Stages 4 to 8 comprise the Low Pressure Turbine.", "Stages 1 and 2 High Pressure Turbine/ Stages 3 to 7 comprise the Low Pressure Turbine."], "explanation": ""}, {"num": 13, "text": "At which specific compressor stage is the clapper (mid height support) inspected?", "level": 1, "correctIdx": 0, "options": ["It is inspected specifically at Stage #3 of HPC.", "It is inspected specifically at Stage #3 of LPC.", "It is inspected specifically at Stage #3 of LPT."], "explanation": "Stage #3 of HPC"}, {"num": 14, "text": "If during borescope inspection you find ‘burn through’ of the leading edge of the 1st stage HPT NGV:", "level": 2, "correctIdx": 1, "options": ["This type of damage is completely not acceptable.", "This type of damage is acceptable with limitation.", "This type of damage is totally always acceptable."], "explanation": "This type of damage is acceptable with limitation."}, {"num": 15, "text": "If during borescope inspection you find ‘burn or burn through’ of the liner shell of combustor:", "level": 2, "correctIdx": 1, "options": ["This type of damage is completely not acceptable.", "This type of damage is acceptable with limitation.", "This type of damage is totally always acceptable."], "explanation": "This type of damage is acceptable with limitation."}, {"num": 16, "text": "What is the correct procedure to inspect the LPC stage 1.5 compressor blades?", "level": 2, "correctIdx": 1, "options": ["One person in intake cowl turns the fan blades.", "One person adjust tube and turn the fan blades.", "One person at right side examines the blades."], "explanation": "One person in the air intake cowl to adjust the position of the guide tube and to turn the stage 1 fan blades."}, {"num": 17, "text": "Which damage can be seen on the HPT 1st stage vane during BSI?", "level": 1, "correctIdx": 2, "options": ["You can observe only burn damage types.", "You can observe only connected loop crack.", "Burn, burn-through, and connected loop crack."], "explanation": "Burn, Burn-through and Connected loop crack."}, {"num": 18, "text": "Which specific engine modules utilize ceramic coatings as a critical material?", "level": 1, "correctIdx": 0, "options": ["Ceramic coatings are strictly used in combustor and high pressure turbine.", "Ceramic coatings are used in Low pressure turbine and Low pressure compressor.", "Ceramic coatings are used in Low pressure turbine; Low pressure compressor and Combustion Chamber"], "explanation": ""}, {"num": 19, "text": "How many specific stages does the High Pressure Compressor (HPC) consist of ?", "level": 1, "correctIdx": 1, "options": ["It consists of exactly 11 stages of the HPC.", "It consists of exactly 10 stages of the HPC.", "It consists of exactly 09 stages of the HPC."], "explanation": "10 stages of High Pressure Compressor (HPC)."}, {"num": 20, "text": "How many specific stages does the Low Pressure Turbine (LPT) consist of ?", "level": 1, "correctIdx": 0, "options": ["The Low Pressure Turbine consists of exactly 5 stages.", "The Low Pressure Turbine consists of exactly 4 stages.", "The Low Pressure Turbine consists of exactly 6 stages."], "explanation": "5 stages."}, {"num": 21, "text": "Which section does the high pressure turbine stage 1 nozzle guide vane belong to?", "level": 1, "correctIdx": 0, "options": ["It is a part of the combustion chamber section.", "It is completely a part of the HPT section unit.", "It is completely a part of the HPC section unit."], "explanation": "The combustion chamber section."}, {"num": 22, "text": "Which specific part of the high-pressure compressor (HPC) cannot be inspected?", "level": 1, "correctIdx": 2, "options": ["The trailing edge (TE) of stage 6 cannot be seen.", "The leading edge (LE) of stage 7 cannot be seen.", "Both of the answers provided here are correct."], "explanation": "Both answer are corected."}, {"num": 23, "text": "Which specific access port should be used for the inspection of HPC stage 3?", "level": 1, "correctIdx": 2, "options": ["Inspection must be done through access Port A.", "Inspection must be done through access Port B.", "Inspection must be done through Port A and B."], "explanation": "Port A and Port B"}, {"num": 24, "text": "How do you correctly borescope inspect the trailing edge of LPT Stage 7?", "level": 1, "correctIdx": 1, "options": ["Inspection is done by the port on the LPT case.", "Inspection is done from Exhaust Nozzle Assembly.", "Inspection is done by the port on the HPT case."], "explanation": "From the Exhaut Nozzle Assembly."}, {"num": 25, "text": "How many stages are there in the Low Pressure Compressor?", "level": 2, "correctIdx": 1, "options": ["It has exactly four stages (1.5, 2.0, 2.3, 2.5)", "It has exactly five stages.(1.0,1.5, 2.0, 2.3, 2.5).", "It has exactly 3 stages (1.5, 2.0, 2.3)."], "explanation": ""}, {"num": 26, "text": "Which component is usually removed to gain access for the combustion chamber borescope inspection?", "level": 1, "correctIdx": 0, "options": ["By removing the igniter plugs or the fuel nozzles.", "By removing the fan spinner cone or pressure valve", "By removing the engine oil scavenge pump assembly."], "explanation": "Combustor access is achieved via igniter ports or specific fuel nozzles."}, {"num": 27, "text": "What specific defect should an inspector look for on the HPT stage 1 nozzle guide vanes?", "level": 2, "correctIdx": 0, "options": ["Burn, Burn-through and Connected loop crack.", "You must look for burn and corrosion damages.", "You must look for severe crack and burn"], "explanation": "Burn through and connected loop cracks are typical limits for stage 1 NGV."}, {"num": 28, "text": "How is the High Pressure Compressor (HPC) rotor manually rotated during a borescope inspection?", "level": 1, "correctIdx": 0, "options": ["By turning the gearbox manual drive pad assembly.", "By turning the FAN", "By turning the LPT"], "explanation": "The HPC (N2) is rotated via the manual turning drive on the accessory gearbox."}, {"num": 29, "text": "Where are the borescope inspection ports for the High Pressure Compressor (HPC) generally located?", "level": 1, "correctIdx": 0, "options": ["They are located on the left and right sides of HPC.", "They are located on right sides of HPC", "They are located on left sides of HPC"], "explanation": "HPC BSI ports are distributed around the left and right sides of the compressor cases."}, {"num": 30, "text": "Where is the manual drive pad for N2 rotor located?", "level": 1, "correctIdx": 0, "options": ["On the accessory gearbox.", "On the front fan spinner.", "On the rear turbine case."], "explanation": ""}, {"num": 31, "text": "How can the trailing edge of the Low Pressure Turbine (LPT) last stage blades be inspected?", "level": 1, "correctIdx": 0, "options": ["By inserting the borescope probe through exhaust nozzle.", "By inserting the borescope probe through forward intake.", "By inserting the borescope probe through bleed air duct."], "explanation": "The last stage LPT trailing edge is directly visible from the rear exhaust nozzle."}, {"num": 32, "text": "Which specific valve port provides borescope access to the 2.5 stage of the low pressure compressor?", "level": 2, "correctIdx": 0, "options": ["You can access through the Booster Stage Bleed Valve port.", "You can access through the Transient Bleed Valve assembly.", "You can access through the High Pressure Bleed Valve port."], "explanation": "Stage 2.5 LPC is inspected through the BSBV (Booster Stage Bleed Valve) port."}, {"num": 33, "text": "Which engine spool must be rotated to inspect the High Pressure Turbine (HPT) rotor blades?", "level": 1, "correctIdx": 0, "options": ["The N2 (High Pressure) rotor shaft must be rotated.", "The N1 (Low Pressure) rotor shaft must be rotated.", "The N3 (Intermediate) rotor shaft must be rotated."], "explanation": "The HPT is directly connected to and driven by the N2 spool."}, {"num": 34, "text": "Where is the clapper positioned on the High Pressure Compressor (HPC) stage 3 blades?", "level": 1, "correctIdx": 0, "options": ["It is positioned exactly at the mid-height of the blade.", "It is positioned exactly at the root bottom of the blade.", "It is positioned exactly at the top tip end of the blade."], "explanation": "Clappers are mid-span shrouds providing support at the mid-height of the blades."}, {"num": 35, "text": "Where does the &#39;burn-through&#39; defect typically manifest on the High Pressure Turbine (HPT) system?", "level": 2, "correctIdx": 0, "options": ["It typically manifests on the Stage 1 Nozzle Guide Vanes.", "LPT Stage 5 blades.", "HPC Stage 3 blades"], "explanation": "Burn-through is common on Stage 1 NGV due to direct hot spots from the combustor."}, {"num": 36, "text": "What must be ensured regarding the engine temperature before initiating a Borescope Inspection (BSI)?", "level": 1, "correctIdx": 0, "options": ["Ensure engine is completely cooled below limits before starting.", "Ensure engine is completely warmed up to limits before starting.", "Ensure engine is completely running at idle speed before starting."], "explanation": "Engines must be cooled down to avoid damaging the BSI equipment."}, {"num": 37, "text": "During the BSI of the HPT blades, what is the primary purpose of slowly rotating the N2 compressor shaft?", "level": 1, "correctIdx": 2, "options": ["To efficiently cool down the internal high pressure turbine area.", "To efficiently clean the surface of the high pressure turbine area.", "To efficiently view every single high pressure turbine rotor blade."], "explanation": "Rotating N2 allows the inspector to see all 360 degrees of the rotor blades."}, {"num": 38, "text": "Which type of defect is most commonly associated with foreign object damage (FOD) on compressor blades?", "level": 1, "correctIdx": 1, "options": ["Material peeling and thermal burning on the blade aerofoil.", "Nicks, dents, and material tearing on the leading edge area.", "Discoloration and severe oxidation on the blade trailing edge."], "explanation": "FOD typically causes physical impact damage like nicks and dents."}, {"num": 39, "text": "When is it safe to insert the borescope probe into the high pressure turbine?", "level": 1, "correctIdx": 0, "options": ["Only after the engine cools below the probe&#39;s limits.", "Only after the engine is running smoothly at an idle.", "Only after the engine oil pressure drops below zero."], "explanation": "The engine internal temp must be below the borescope manufacturer&#39;s limit to prevent probe melting."}, {"num": 40, "text": "Where can you directly view the last stage of the LPT?", "level": 1, "correctIdx": 0, "options": ["From the exhaust assembly.", "From the booster stage pad", "From the igniter port area"], "explanation": ""}, {"num": 41, "text": "Which compressor stage is identified as the first of HPC?", "level": 2, "correctIdx": 0, "options": ["It is identified as stage 3.", "It is identified as stage 1.", "It is identified as stage 2."], "explanation": ""}, {"num": 42, "text": "Which specific port is frequently utilized to inspect the leading edge of the HPT Stage 1 blades?", "level": 2, "correctIdx": 0, "options": ["The borescope inspection port for the engine igniter plug.", "The borescope inspection port for the engine bleed valves.", "The borescope inspection port for the engine oil filters."], "explanation": "Removing the igniter plug provides a direct view into the combustor and HPT Stage 1 Leading Edge."}, {"num": 43, "text": "Where is Foreign Object Damage (FOD) most likely to be discovered during an engine BSI?", "level": 1, "correctIdx": 0, "options": ["It is most likely found on the first compressor blades.", "It is most likely found on the rear turbine rotor blade.", "It is most likely found on the external engine gearbox."], "explanation": "FOD ingests from the front, hitting the fan and forward LPC/HPC stages first."}, {"num": 44, "text": "How many igniter ports are used for combustion access?", "level": 2, "correctIdx": 0, "options": ["There are two ports.", "There are four ports.", "There are five ports."], "explanation": ""}, {"num": 45, "text": "What component is removed to inspect the combustor?", "level": 1, "correctIdx": 0, "options": ["The engine igniter plugs.", "The engine oil scavenge.", "The engine fuel filters."], "explanation": ""}, {"num": 46, "text": "Which compressor stage has the mid-span clapper?", "level": 1, "correctIdx": 0, "options": ["The HPC stage three blades.", "The LPC stage two blades.", "The HPC stage ten blades."], "explanation": ""}, {"num": 47, "text": "Crack at endcap of fuel nozzle, AC can be dispatch with:", "level": 2, "correctIdx": 1, "options": ["Fuel nozzle replaced", "No action require because all endcap segment may be missing", "Remove engine within 5FC"], "explanation": ""}, {"num": 48, "text": "How many stages are there in the High Pressure Turbine?", "level": 1, "correctIdx": 0, "options": ["It has exactly two stages.", "It has exactly four stages.", "It has exactly five stages."], "explanation": ""}];
+
+// ==========================================
+// SHUFFLE FUNCTIONS
+// ==========================================
+function shuffleArray(arr) {
+  // Fisher-Yates shuffle
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function prepareQuiz() {
+  // 1. Tráo thứ tự câu hỏi
+  const shuffledQuestions = shuffleArray(rawQuestions);
+
+  // 2. Tráo thứ tự đáp án trong mỗi câu
+  return shuffledQuestions.map(q => {
+    // Tạo mảng [{text, isCorrect}, ...]
+    const opts = q.options.map((text, i) => ({
+      text: text,
+      isCorrect: i === q.correctIdx
+    }));
+
+    // Tráo đáp án
+    const shuffledOpts = shuffleArray(opts);
+
+    // Tìm index đáp án đúng sau khi tráo
+    const newCorrectIdx = shuffledOpts.findIndex(o => o.isCorrect);
+
+    return {
+      num: q.num,
+      text: q.text,
+      level: q.level,
+      options: shuffledOpts.map(o => o.text),
+      correctIdx: newCorrectIdx,
+      explanation: q.explanation
+    };
+  });
+}
+
+// ==========================================
+// QUIZ LOGIC
+// ==========================================
+const questions = prepareQuiz();
+const total = questions.length;
+const labels = ['A', 'B', 'C', 'D', 'E'];
+let answered = 0, correctCount = 0;
+
+function init() {
+  const area = document.getElementById('quizArea');
+  area.innerHTML = '';
+
+  questions.forEach((q, qi) => {
+    let optHtml = '';
+    q.options.forEach((opt, oi) => {
+      optHtml += `
+        <div class="option" id="opt_${qi}_${oi}" onclick="selectAnswer(${qi},${oi})">
+          <span class="label">${labels[oi]}</span>
+          <span>${opt}</span>
+        </div>`;
+    });
+
+    area.innerHTML += `
+      <div class="q-card" id="card_${qi}">
+        <div class="q-header">
+          <div class="q-text">${qi + 1}. ${q.text}</div>
+          <div class="q-badge">
+            <span class="q-level">L${q.level}</span>
+            <span class="q-orig">#${q.num}</span>
+          </div>
+        </div>
+        <div class="options">${optHtml}</div>
+        <div class="feedback" id="fb_${qi}"></div>
+      </div>`;
+  });
+}
+
+function selectAnswer(qi, oi) {
+  const q = questions[qi];
+  const isCorrect = oi === q.correctIdx;
+  answered++;
+  if (isCorrect) correctCount++;
+
+  // Disable tất cả options + highlight
+  q.options.forEach((_, j) => {
+    const el = document.getElementById(`opt_${qi}_${j}`);
+    el.classList.add('disabled');
+    if (j === q.correctIdx) {
+      el.classList.add(isCorrect ? 'correct' : 'show-correct');
+    }
+    if (j === oi && !isCorrect) {
+      el.classList.add('wrong');
+    }
+  });
+
+  // Hiện feedback + explanation
+  const fb = document.getElementById(`fb_${qi}`);
+  let fbHtml = '';
+  if (isCorrect) {
+    fb.className = 'feedback correct';
+    fbHtml = '<strong>&#10003; Correct!</strong>';
+  } else {
+    fb.className = 'feedback wrong';
+    fbHtml = `<strong>&#10007; Incorrect.</strong> The correct answer is <strong>${labels[q.correctIdx]}</strong>.`;
+  }
+  if (q.explanation) {
+    fbHtml += `<div class="exp">&#128161; ${q.explanation}</div>`;
+  }
+  fb.innerHTML = fbHtml;
+  fb.style.display = 'block';
+
+  // Cập nhật điểm
+  const pct = answered > 0 ? Math.round(correctCount / answered * 100) : 0;
+  document.getElementById('scoreText').textContent = `Score: ${correctCount} / ${answered}`;
+  document.getElementById('pctText').textContent = `(${pct}%)`;
+  document.getElementById('progressText').textContent = `${answered} / ${total} answered`;
+
+  document.getElementById(`card_${qi}`).classList.add('answered');
+
+  // Hoàn thành quiz
+  if (answered === total) {
+    setTimeout(() => {
+      const finalPct = Math.round(correctCount / total * 100);
+      document.getElementById('finalScore').textContent =
+        `${correctCount} / ${total} (${finalPct}%)`;
+      document.getElementById('finalDetail').textContent =
+        finalPct >= 80 ? 'Excellent! You passed!' :
+        finalPct >= 60 ? 'Good effort. Review missed questions.' :
+        'Keep studying. Review the explanations above.';
+      document.getElementById('resultBox').style.display = 'block';
+      document.getElementById('resultBox').scrollIntoView({behavior:'smooth'});
+    }, 500);
+  }
+}
+
+// Khởi chạy
+init();
+</script>
+</body>
+</html>
